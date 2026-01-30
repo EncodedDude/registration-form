@@ -11,12 +11,21 @@ function App() {
         password: "",
         passwordConfirm: "",
     });
-    const [error, setError] = useState(null);
-    const [isValid, setIsValid] = useState(false);
+    const [errors, setErrors] = useState({
+        errorEmail: null,
+        errorPassword: null,
+        errorPasswordConfirm: null,
+    });
+
+    const { email, password, passwordConfirm } = formData;
+
+    const isValid =
+        Object.values(formData).every((data) => data !== "") &&
+        Object.values(errors).every((error) => error === null);
 
     const onSubmit = (event) => {
         event.preventDefault();
-        sendFormData(formData);
+        sendFormData({ email, password });
     };
 
     const onEmailChange = ({ target }) => {
@@ -28,9 +37,10 @@ function App() {
         if (
             !/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(target.value)
         ) {
-            newError = "Упс... Убедитесь в правильности формата почты. Например: qwerty123@qwerty.ru";
+            newError =
+                "Упс... Убедитесь в правильности формата почты. Например: qwerty123@qwerty.ru";
         }
-        setError(newError);
+        setErrors({ ...errors, errorEmail: newError });
     };
 
     const onPasswordChange = ({ target }) => {
@@ -40,9 +50,10 @@ function App() {
     const onPasswordBlur = ({ target }) => {
         let newError = null;
         if (!/^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]+$/.test(target.value)) {
-            newError = "Упс... Пароль должен состоять из латинских букв и содержать хотя бы одну заглавную букву и цифру";
+            newError =
+                "Упс... Пароль должен состоять из латинских букв и содержать хотя бы одну заглавную букву и цифру";
         }
-        setError(newError);
+        setErrors({ ...errors, errorPassword: newError });
     };
 
     const onPasswordConfirmChange = ({ target }) => {
@@ -51,23 +62,26 @@ function App() {
 
     const onPasswordConfirmBlur = ({ target }) => {
         let newError = null;
-        let validToggle = false;
-        if (target.value !== formData.password) {
-            newError = 'Упс... Пароли должны совпадать, попробуйте еще раз';
-        } else {
-            validToggle = true;
+        if (target.value !== password) {
+            newError =
+                "Упс... Пароли должны совпадать";
         }
-        setIsValid(validToggle);
-        setError(newError);
+        setErrors({ ...errors, errorPasswordConfirm: newError });
     };
-
-    const { email, password, passwordConfirm } = formData;
 
     return (
         <div className={styles["page-form"]}>
             <h1 className={styles.title}>Регистрация</h1>
             <form className={styles.form} onSubmit={onSubmit}>
-                {error && <div className={styles.error}>{error}</div>}
+                {Object.values(errors).some((error) => error !== null) && (
+                    <div className={styles.errors}>
+                        {Object.values(errors).map((error, index) => (
+                            <div className={styles.error} key={index}>
+                                {error}
+                            </div>
+                        ))}
+                    </div>
+                )}
                 <input
                     type="email"
                     name="email"
@@ -94,6 +108,7 @@ function App() {
                     onChange={onPasswordConfirmChange}
                     onBlur={onPasswordConfirmBlur}
                     className={styles.input}
+                    disabled={!password}
                 />
                 <button
                     type="submit"

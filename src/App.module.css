@@ -30,9 +30,14 @@
     transition: 0.3s ease-in;
 }
 
-.input:hover,
+.input:hover:not(:disabled),
 .input:focus {
     background: #ebeefd;
+}
+
+.input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .button {
