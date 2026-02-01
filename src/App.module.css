@@ -56,7 +56,8 @@
     transition: 0.3s ease-in;
 }
 
-.button:hover:not(:disabled) {
+.button:hover:not(:disabled),
+.button:focus {
     background: transparent;
     border-color: #1616ae;
     color: #1616ae;

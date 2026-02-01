@@ -1,21 +1,24 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./App.module.css";
 
 const sendFormData = (data) => {
     console.log(data);
 };
 
+const initialState = {
+    email: "",
+    password: "",
+    passwordConfirm: "",
+};
+
 function App() {
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-        passwordConfirm: "",
-    });
+    const [formData, setFormData] = useState(initialState);
     const [errors, setErrors] = useState({
         errorEmail: null,
         errorPassword: null,
         errorPasswordConfirm: null,
     });
+    const sendButton = useRef(null);
 
     const { email, password, passwordConfirm } = formData;
 
@@ -23,9 +26,16 @@ function App() {
         Object.values(formData).every((data) => data !== "") &&
         Object.values(errors).every((error) => error === null);
 
+    useEffect(() => {
+        if (isValid && sendButton.current) {
+            sendButton.current.focus();
+        }
+    }, [isValid]);
+
     const onSubmit = (event) => {
         event.preventDefault();
         sendFormData({ email, password });
+        setFormData(initialState);
     };
 
     const onEmailChange = ({ target }) => {
@@ -33,14 +43,17 @@ function App() {
     };
 
     const onEmailBlur = ({ target }) => {
-        let newError = null;
-        if (
+        const emailError =
             !/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(target.value)
-        ) {
-            newError =
-                "Упс... Убедитесь в правильности формата почты. Например: qwerty123@qwerty.ru";
-        }
-        setErrors({ ...errors, errorEmail: newError });
+                ? "Упс... Убедитесь в правильности формата почты. Например: qwerty123@qwerty.ru"
+                : null;
+        setErrors({ ...errors, errorEmail: emailError });
+    };
+
+    const isPasswordsCoincidence = () => {
+        return password !== passwordConfirm
+            ? "Упс... Пароли должны совпадать"
+            : null;
     };
 
     const onPasswordChange = ({ target }) => {
@@ -48,25 +61,27 @@ function App() {
     };
 
     const onPasswordBlur = ({ target }) => {
-        let newError = null;
-        if (!/^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]+$/.test(target.value)) {
-            newError =
-                "Упс... Пароль должен состоять из латинских букв и содержать хотя бы одну заглавную букву и цифру";
-        }
-        setErrors({ ...errors, errorPassword: newError });
+        const passwordError = !/^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]+$/.test(
+            target.value,
+        )
+            ? "Упс... Пароль должен состоять из латинских букв и содержать хотя бы одну заглавную букву и цифру"
+            : null;
+        setErrors({
+            ...errors,
+            errorPassword: passwordError,
+            errorPasswordConfirm: isPasswordsCoincidence(),
+        });
     };
 
     const onPasswordConfirmChange = ({ target }) => {
         setFormData({ ...formData, passwordConfirm: target.value });
     };
 
-    const onPasswordConfirmBlur = ({ target }) => {
-        let newError = null;
-        if (target.value !== password) {
-            newError =
-                "Упс... Пароли должны совпадать";
-        }
-        setErrors({ ...errors, errorPasswordConfirm: newError });
+    const onPasswordConfirmBlur = () => {
+        setErrors({
+            ...errors,
+            errorPasswordConfirm: isPasswordsCoincidence(),
+        });
     };
 
     return (
@@ -111,6 +126,7 @@ function App() {
                     disabled={!password}
                 />
                 <button
+                    ref={sendButton}
                     type="submit"
                     className={styles.button}
                     disabled={!isValid}
